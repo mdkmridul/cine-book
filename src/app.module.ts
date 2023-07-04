@@ -6,7 +6,6 @@ import { ConfigService } from './config/config.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CinemasModule } from './cinemas/cinemas.module';
 import { BookingsModule } from './bookings/bookings.module';
-
 @Module({
   imports: [
     ConfigModule,
