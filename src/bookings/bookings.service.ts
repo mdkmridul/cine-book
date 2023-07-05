@@ -1,7 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Booking } from './schemas/booking.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { BookSeatType } from './types/bookSeat.type';
 import { genericResponse } from 'src/constants/genric.type';
 import { CinemasService } from 'src/cinemas/cinemas.service';
@@ -49,7 +49,7 @@ export class BookingsService {
     }
 
     let newSeats = [];
-    seatNumbers.forEach((ele) => {
+    payload.seatNumbers.forEach((ele) => {
       newSeats.push({
         seatNumber: ele,
         bookedBy: payload.bookedBy,
@@ -66,7 +66,7 @@ export class BookingsService {
     };
   }
 
-  async bookedTickets(cinemaName: string): Promise<
+  async getBookedTickets(cinemaName: string): Promise<
     genericResponse & {
       data: { bookings: Booking[] };
     }
@@ -82,5 +82,44 @@ export class BookingsService {
       data: { bookings },
       success: true,
     };
+  }
+
+  async seatsStatus(
+    cinemaName: string,
+  ): Promise<{ bookedSeats: number[]; seatsLeft: number[] }> {
+    const cinema = await this.cinemasService.getCinema(cinemaName);
+    if (!cinema) {
+      throw new HttpException('No cinema exist with this name', 400);
+    }
+    const seats = await this.bookingModel.aggregate([
+      {
+        $match: { cinema: new mongoose.Types.ObjectId(cinema.id) },
+      },
+      {
+        $group: { _id: '', seats: { $push: '$seatNumber' } },
+      },
+      {
+        $project: { _id: 0, seats: 1 },
+      },
+    ]);
+
+    const bookedSeats = seats[0].seats;
+
+    const seatsLeft: number[] = [];
+
+    if (bookedSeats.length) {
+      const bookedSeatsObj = {};
+      bookedSeats.forEach((seat) => {
+        bookedSeatsObj[`${seat}`] = true;
+      });
+
+      for (let i = 1; i <= cinema.totalSeats; i++) {
+        if (!bookedSeatsObj[`${i}`]) {
+          seatsLeft.push(i);
+        }
+      }
+    }
+
+    return { bookedSeats, seatsLeft };
   }
 }

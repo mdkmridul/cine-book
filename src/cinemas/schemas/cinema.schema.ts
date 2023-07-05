@@ -6,7 +6,7 @@ export type Cinema = {
   totalSeats: number;
   contact?: string;
   seats: string[];
-  createdAt: string;
+  createdAt: string | mongoose.ObjectId;
   updatedAt: string;
 };
 

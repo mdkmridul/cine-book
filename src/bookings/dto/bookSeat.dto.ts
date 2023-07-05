@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class BookSeatDto {
   @IsNotEmpty()
@@ -10,5 +10,6 @@ export class BookSeatDto {
   readonly seatNumbers: number[];
 
   @IsString()
+  @IsOptional()
   readonly bookedBy: string;
 }
